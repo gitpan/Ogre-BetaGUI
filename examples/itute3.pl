@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# This is OGRE's "Intermediate Tutorial 2" but in Perl
+# This is OGRE's "Intermediate Tutorial 3" but in Perl
 # and using BetaGUI instead of CEGUI.
 
 
@@ -11,7 +11,7 @@ use warnings;
 use Ogre::BetaGUI::BetaGUIListener;
 @MouseQueryGUI::ISA = qw(Ogre::BetaGUI::BetaGUIListener);
 
-use Ogre 0.33;
+use Ogre 0.34;
 use Ogre::BetaGUI::GUI;
 
 sub new {
@@ -48,12 +48,15 @@ use warnings;
 use Ogre::ExampleFrameListener;
 @MouseQueryListener::ISA = qw(Ogre::ExampleFrameListener);
 
-use Ogre 0.33;
+use Ogre 0.34;
 use Ogre::Ray;
 use Ogre::Vector3;
 
 use OIS 0.04;
 use OIS::Mouse;
+
+use constant ROBOT_MASK => 1;
+use constant NINJA_MASK => 2;
 
 
 sub new {
@@ -82,6 +85,9 @@ sub new {
     # Create RaySceneQuery
     $self->{mRaySceneQuery} = $self->{mSceneMgr}->createRayQuery(Ogre::Ray->new());
 
+    $self->{mRobotMode} = 1;
+    $self->{mDebugText} = "Robot Mode Enabled - Press Space to Toggle";
+
     return $self;
 }
 
@@ -90,21 +96,32 @@ sub frameStarted {
 
     return 0 unless $self->SUPER::frameStarted($evt);
 
+    # swap modes
+    if ($self->{mKeyboard}->isKeyDown(OIS::Keyboard->KC_SPACE) && $self->{mTimeUntilNextToggle} <= 0)
+    {
+        $self->{mRobotMode} = ! $self->{mRobotMode};
+        $self->{mTimeUntilNextToggle} = 1;
+        $self->{mDebugText} = ($self->{mRobotMode} ? "Robot" : "Ninja") . " Mode Enabled - Press Space to Toggle";
+    }
+
     # Setup the scene query
     my $camPos = $self->{mCamera}->getPosition();
     my $cameraRay = Ogre::Ray->new(Ogre::Vector3->new($camPos->x, 5000.0, $camPos->z),
                                    $self->{mDOWN});
     $self->{mRaySceneQuery}->setRay($cameraRay);
+    $self->{mRaySceneQuery}->setSortByDistance(0);
 
     # Perform the scene query
-    my $qryResult = $self->{mRaySceneQuery}->execute();
+    my $result = $self->{mRaySceneQuery}->execute();
 
     # Get the results, set the camera height
-    if (@$qryResult && defined $qryResult->[0]->{worldFragment}) {
-        my $terrainHeight = $qryResult->[0]->{worldFragment}->singleIntersection->y;
-
-        if (($terrainHeight + 10.0) > $camPos->y) {
-            $self->{mCamera}->setPosition($camPos->x, $terrainHeight + 10.0, $camPos->z);
+    foreach my $itr (@$result) {
+        if (defined $itr->{worldFragment}) {
+            my $terrainHeight = $itr->{worldFragment}->singleIntersection->y;
+            if (($terrainHeight + 10.0) > $camPos->y) {
+                $self->{mCamera}->setPosition($camPos->x, $terrainHeight + 10.0, $camPos->z);
+            }
+            last;
         }
     }
 
@@ -112,10 +129,46 @@ sub frameStarted {
 }
 
 # MouseListener callbacks
-sub mouseMoved {
-    my ($self, $evt) = @_;
+sub mouseReleased {
+    my ($self, $arg, $id) = @_;
 
-    my $state = $evt->state;
+    # Left mouse button up
+    if ($id == OIS::Mouse->MB_Left) {
+        # this doesn't do anything, so why call it....
+        # $self->onLeftReleased($arg);
+        $self->{mLMouseDown} = 0;
+    }
+
+    # Right mouse button up
+    elsif ($id == OIS::Mouse->MB_Right) {
+        $self->onRightReleased($arg);
+        $self->{mRMouseDown} = 0;
+    }
+
+    return 1;
+}
+
+sub mousePressed {
+    my ($self, $arg, $id) = @_;
+
+    # Left mouse button down
+    if ($id == OIS::Mouse->MB_Left) {
+        $self->onLeftPressed($arg);
+        $self->{mLMouseDown} = 1;
+    }
+
+    # Right mouse button down
+    elsif ($id == OIS::Mouse->MB_Right) {
+        $self->onRightPressed($arg);
+        $self->{mRMouseDown} = 1;
+    }
+
+    return 1;
+}
+
+sub mouseMoved {
+    my ($self, $arg) = @_;
+    my $state = $arg->state;
 
     # Update BetaGUI with the mouse motion
     $self->injectMouse($state);
@@ -125,11 +178,14 @@ sub mouseMoved {
         my $mouseRay = $self->{mCamera}->getCameraToViewportRay($self->{mMQGUI}{mouseX} / $state->width,
                                                                 $self->{mMQGUI}{mouseY} / $state->height);
         $self->{mRaySceneQuery}->setRay($mouseRay);
+        $self->{mRaySceneQuery}->setSortByDistance(0);
 
-        my $qryResult = $self->{mRaySceneQuery}->execute();
-
-        if (@$qryResult && defined $qryResult->[0]->{worldFragment}) {
-            $self->{mCurrentObject}->setPosition($qryResult->[0]->{worldFragment}->singleIntersection);
+        my $result = $self->{mRaySceneQuery}->execute();
+        foreach my $itr (@$result) {
+            if (defined $itr->{worldFragment}) {
+                $self->{mCurrentObject}->setPosition($itr->{worldFragment}->singleIntersection);
+                last;
+            }
         }
     }
 
@@ -142,57 +198,63 @@ sub mouseMoved {
     return 1;
 }
 
-sub mousePressed {
-    my ($self, $evt, $id) = @_;
+sub onLeftPressed {
+    my ($self, $arg) = @_;
 
-    # Left mouse button down
-    if ($id == OIS::Mouse->MB_Left) {
-        my $state = $evt->state;
+    # Turn off bounding box.
+    $self->{mCurrentObject}->showBoundingBox(0) if defined $self->{mCurrentObject};
 
-        my $mouseRay = $self->{mCamera}->getCameraToViewportRay($self->{mMQGUI}{mouseX} / $state->width,
-                                                                $self->{mMQGUI}{mouseY} / $state->height);
-        $self->{mRaySceneQuery}->setRay($mouseRay);
+    # Setup the ray scene query
+    my $state = $arg->state;
+    my $mouseRay = $self->{mCamera}->getCameraToViewportRay($self->{mMQGUI}{mouseX} / $state->width,
+                                                            $self->{mMQGUI}{mouseY} / $state->height);
+    $self->{mRaySceneQuery}->setRay($mouseRay);
+    $self->{mRaySceneQuery}->setSortByDistance(1);
+    $self->{mRaySceneQuery}->setQueryMask($self->{mRobotMode} ? ROBOT_MASK : NINJA_MASK);
 
-        # Execute query
-        my $qryResult = $self->{mRaySceneQuery}->execute();
-
-        if (@$qryResult && defined $qryResult->[0]->{worldFragment}) {
-            my $name = sprintf("Robot%d", $self->{mCount}++);
-            my $ent = $self->{mSceneMgr}->createEntity($name, "robot.mesh");
-            $self->{mCurrentObject} =
-              $self->{mSceneMgr}->getRootSceneNode->createChildSceneNode($name . "Node",
-                                                                         $qryResult->[0]->{worldFragment}->singleIntersection);
-            $self->{mCurrentObject}->attachObject($ent);
-            $self->{mCurrentObject}->setScale(0.1, 0.1, 0.1);
+    # Execute query
+    my $result = $self->{mRaySceneQuery}->execute();
+    foreach my $itr (@$result) {
+        if (defined($itr->{movable}) && $itr->{movable}->getName !~ /^tile\[/) {
+            $self->{mCurrentObject} = $itr->{movable}->getParentSceneNode;
+            last;
         }
 
-        $self->{mLMouseDown} = 1;
+        elsif (defined $itr->{worldFragment}) {
+            my ($ent, $name);
+
+            if ($self->{mRobotMode}) {
+                $name = sprintf("Robot%d", $self->{mCount}++);
+                $ent = $self->{mSceneMgr}->createEntity($name, "robot.mesh");
+                $ent->setQueryFlags(ROBOT_MASK);
+            }
+            else {
+                $name = sprintf("Ninja%d", $self->{mCount}++);
+                $ent = $self->{mSceneMgr}->createEntity($name, "ninja.mesh");
+                $ent->setQueryFlags(NINJA_MASK);
+            }
+
+            $self->{mCurrentObject} =
+              $self->{mSceneMgr}->getRootSceneNode->createChildSceneNode($name . "Node",
+                                                                         $itr->{worldFragment}->singleIntersection);
+            $self->{mCurrentObject}->attachObject($ent);
+            $self->{mCurrentObject}->setScale(0.1, 0.1, 0.1);
+            last;
+        }
     }
 
-    # Right mouse button down
-    elsif ($id == OIS::Mouse->MB_Right) {
-        $self->{mMQGUI}{mPointer}->hide();
-        $self->{mRMouseDown} = 1;
-    }
-
-    return 1;
+    # Show the bounding box to highlight the selected object
+    $self->{mCurrentObject}->showBoundingBox(1) if defined $self->{mCurrentObject};
 }
 
-sub mouseReleased {
-    my ($self, $evt, $id) = @_;
+sub onRightPressed {
+    my ($self, $arg) = @_;
+    $self->{mMQGUI}{mPointer}->hide();
+}
 
-    # Left mouse button up
-    if ($id == OIS::Mouse->MB_Left) {
-        $self->{mLMouseDown} = 0;
-    }
-
-    # Right mouse button up
-    elsif ($id == OIS::Mouse->MB_Right) {
-        $self->{mMQGUI}{mPointer}->show();
-        $self->{mRMouseDown} = 0;
-    }
-
-    return 1;
+sub onRightReleased {
+    my ($self, $arg) = @_;
+    $self->{mMQGUI}{mPointer}->show();
 }
 
 sub injectMouse {
@@ -224,7 +286,7 @@ use warnings;
 use Ogre::ExampleApplication;
 @MouseQueryApplication::ISA = qw(Ogre::ExampleApplication);
 
-use Ogre 0.33 qw(:SceneType);
+use Ogre 0.34 qw(:SceneType);
 use Ogre::ColourValue;
 use Ogre::Degree;
 

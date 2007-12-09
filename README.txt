@@ -15,7 +15,7 @@ make basic dialogs with text input and buttons. The library's functionality
 is intentionally very basic, but you can customize it somewhat by providing
 your own media resources.
 
-I was going to just bundle this in with my Perl Ogre module, but putting it
+I was going to just bundle this in with the Perl Ogre module, but putting it
 in a separate module allows people to download it only if they need it
 (Perl Ogre is getting pretty big already, as it is...)
 
@@ -28,7 +28,7 @@ Required:
 
 The BetaGUI library is meant to be used with OGRE applications and depends on
 Ogre to render Overlays and do material management. In order to use this
-module, you'll need to install my Perl Ogre module first.
+module, you'll need to install the Ogre Perl module first.
 
 Optional:
 

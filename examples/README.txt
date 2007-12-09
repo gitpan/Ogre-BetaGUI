@@ -44,3 +44,10 @@ be put in several files.
 - itute2.pl : shows how to use a mouse cursor to place robots
   on a terrain; based on the Intermediate Tutorial 2 on the OGRE wiki
   (though that one uses CEGUI instead of BetaGUI).
+
+- itute3.pl : place robots or ninjas on the terrain and also select
+  and drag already-placed ones; ported from Intermediate Tutorial 3
+  on the OGRE wiki (but again using BetaGUI in place of CEGUI)
+
+- itute4.pl : drag a square to select groups of robots; ported from
+  Intermediate Tutorial 4 on the OGRE wiki (but using BetaGUI)
