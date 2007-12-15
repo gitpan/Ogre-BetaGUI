@@ -27,7 +27,8 @@ sub new {
         if (ref($arg) eq 'CODE') {
             $self->{t} = 1;
             $self->{fp} = $arg;
-        } elsif (blessed($arg) && $arg->isa('Ogre::BetaGUI::BetaGUIListener')) {
+        }
+        elsif (blessed($arg) && $arg->isa('Ogre::BetaGUI::BetaGUIListener')) {
             $self->{t} = 2;
             $self->{LS} = $arg;
         }

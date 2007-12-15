@@ -16,7 +16,7 @@ use warnings;
 use List::MoreUtils qw(firstidx);
 use Scalar::Util qw(refaddr);   # note: in core as of Perl 5.8
 
-use Ogre 0.33 qw(:GuiMetricsMode);
+use Ogre 0.35 qw(:GuiMetricsMode);
 use Ogre::OverlayManager;
 
 use Ogre::BetaGUI::Window;
@@ -88,6 +88,7 @@ sub injectBackspace {
 
 sub createWindow {
     my ($self, $Dimensions, $Material, $type, $caption) = @_;
+    $caption = '' unless defined $caption;
 
     my $window = Ogre::BetaGUI::Window->new($Dimensions, $Material, $type, $caption, $self);
     push @{ $self->{WN} }, $window;
@@ -102,10 +103,15 @@ sub destroyWindow {
 
 sub createOverlay {
     my ($self, $name, $position, $dimensions, $material, $caption, $autoAdd) = @_;
+    $material = '' unless defined $material;
+    $caption = '' unless defined $caption;
+    $autoAdd = 1 unless defined $autoAdd;
 
-    my $type = ($caption eq '') ? "Panel" : "TextArea";
+    my $om = Ogre::OverlayManager->getSingletonPtr;
+    my $e = ($caption eq '')
+      ? $om->createPanelOverlayElement("Panel", $name)
+      : $om->createTextAreaOverlayElement("TextArea", $name);
 
-    my $e = Ogre::OverlayManager->getSingletonPtr->createOverlayContainer($type, $name);
     $e->setMetricsMode(GMM_PIXELS);
     $e->setDimensions($dimensions->[0], $dimensions->[1]);
     $e->setPosition($position->[0], $position->[1]);

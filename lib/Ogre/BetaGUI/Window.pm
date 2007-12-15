@@ -51,7 +51,7 @@ sub new {
         my $c = Ogre::BetaGUI::Callback->new();
         $c->{t} = 4;
 
-        $self->{mRZ} = $self->createButton([$Dimensions->[2] - 16, $Dimensions->[3] - 16, 16, 16],
+        $self->{mRZ} = $self->createButton([($Dimensions->[2] - 16), ($Dimensions->[3] - 16), 16, 16],
                                            $Material . ".resize", "", $c);
     }
 
@@ -68,7 +68,8 @@ sub new {
 
 sub DESTROY {
     my ($self) = @_;
-    $self->{mGUI}->{mO}->remove2D($self->{mO});
+    $self->{mGUI}{mO}->remove2D($self->{mO})
+      if defined($self->{mGUI}) && defined($self->{mGUI}{mO}) && defined($self->{mO});
 }
 
 sub createButton {
@@ -141,8 +142,14 @@ sub check {
         !($px <= $self->{'x'} + $self->{'w'} && $py <= $self->{'y'} + $self->{'h'}))
     {
         if ($self->{mAB}) {
-            if ($self->{mAB}{callback}{t} == 2) {
-                $self->{mAB}{callback}{LS}->onButtonPress($self->{mAB}, 3);
+            my $cb = $self->{mAB}{callback};
+            if ($cb->{t} == 2) {
+                if (exists($cb->{LS}) && defined($cb->{LS})) {
+                    $cb->{LS}->onButtonPress($self->{mAB}, 3);
+                }
+                else {
+                    warn "onButtonPress not called: LS undef at ", __FILE__, ":", __LINE__, $/;
+                }
             }
 
             $self->{mAB}->activate(0);
@@ -155,12 +162,20 @@ sub check {
         next if $mb->in($px, $py, $self->{'x'}, $self->{'y'});
 
         if ($self->{mAB}) {
-            # hopefully refaddr works, otherwise might have to add
-            # a unique "ID" attribute to Ogre::BetaGUI::Button
-
             if (refaddr($mb) != refaddr($self->{mAB})) {
                 $self->{mAB}->activate(0);
-                $self->{mAB}{callback}{LS}->onButtonPress($self->{mAB}, 3);
+
+                # xxx: there's something wrong here.. when you drag a window
+                # around quickly, and the mouse cursor detaches from the window
+                # (which is a separate bug....) it can go across another button/window
+                # and apparently get in here with $cb->{LS} undef.
+                my $cb = $self->{mAB}{callback};
+                if (exists($cb->{LS}) && defined($cb->{LS})) {
+                    $cb->{LS}->onButtonPress($self->{mAB}, 3);
+                }
+                else {
+                    warn "onButtonPress not called: LS undef at ", __FILE__, ":", __LINE__, $/;
+                }
             }
         }
 
@@ -174,11 +189,16 @@ sub check {
 
         my $t = $self->{mAB}{callback}{t};
         if ($t == 1) {
-            # XXX: check this after Callback is implemented
             $self->{mAB}{callback}{fp}->($self->{mAB}, $lmb);
         }
         elsif ($t == 2) {
-            $self->{mAB}{callback}{LS}->onButtonPress($self->{mAB}, $lmb);
+            my $cb = $self->{mAB}{callback};
+            if (exists($cb->{LS}) && defined($cb->{LS})) {
+                $cb->{LS}->onButtonPress($self->{mAB}, $lmb);
+            }
+            else {
+                warn "onButtonPress not called: LS undef at ", __FILE__, ":", __LINE__, $/;
+            }
         }
         elsif ($t == 3) {
             if ($lmb) {

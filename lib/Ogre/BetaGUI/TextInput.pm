@@ -26,8 +26,8 @@ sub new {
         mCP      => undef,       # OverlayContainer * (caption)
         mmn      => $Material,   # material name normal
         mma      => $Material,   # material name active
-        value    => '',
-        length   => 0,
+        value    => $Value,
+        length   => $length,
     }, $pkg;
 
     my $ma = Ogre::MaterialManager->getSingletonPtr->getByName($self->{mmn} . ".active");
@@ -39,7 +39,7 @@ sub new {
                                                  $Material, '', 0);
     $parent->{mGUI}{tc}++;
     $self->{mCP} = $parent->{mGUI}->createOverlay($self->{mO}->getName . "c",
-                                                 [4, ($self->{'h'} - $parent->{mGUI}{mFontSize} / 2)],
+                                                 [4, (($self->{'h'} - $parent->{mGUI}{mFontSize}) / 2)],
                                                  [$self->{'w'}, $self->{'h'}],
                                                  '', $Value, 0);
 

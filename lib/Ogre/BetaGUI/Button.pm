@@ -38,7 +38,7 @@ sub new {
                                                  $Material, '', 0);
     $parent->{mGUI}{bc}++;
     $self->{mCP} = $parent->{mGUI}->createOverlay($self->{mO}->getName . "c",
-                                                 [4, ($self->{'h'} - $parent->{mGUI}{mFontSize} / 2)],
+                                                 [4, (($self->{'h'} - $parent->{mGUI}{mFontSize}) / 2)],
                                                  [$self->{'w'}, $self->{'h'}],
                                                  '', $Text, 0);
 
@@ -52,8 +52,12 @@ sub new {
 
 sub DESTROY {
     my ($self) = @_;
-    $self->{mO}->getParent->removeChild($self->{mO}->getName);
-    $self->{mCP}->getParent->removeChild($self->{mCP}->getName);
+
+    # I have problems all the time with DESTROY in Perl....
+#    $self->{mO}->getParent->removeChild($self->{mO}->getName)
+#      if defined $self->{mO};
+#    $self->{mCP}->getParent->removeChild($self->{mCP}->getName)
+#      if defined $self->{mCP};
 }
 
 sub activate {

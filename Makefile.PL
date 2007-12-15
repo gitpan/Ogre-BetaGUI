@@ -13,12 +13,12 @@ WriteMakefile(
 
 sub check_prereqs {
     my %prereqs = (
-        'Ogre' => 0.33,
+        'Ogre' => 0.35,
         'Test::More' => 0,
     );
 
     # Check if optional Perl modules are installed
-    my $OIS_REQ_VERSION = 0.03;
+    my $OIS_REQ_VERSION = 0.04;
     unless (eval { require OIS && $OIS::VERSION >= $OIS_REQ_VERSION }) {
         my $msg = "\nNote: the optional Perl module OIS >= $OIS_REQ_VERSION is not installed.\n"
           . "Installing OIS would be a very good idea\n"

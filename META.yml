@@ -1,12 +1,12 @@
 --- #YAML:1.0
 name:                Ogre-BetaGUI
-version:             0.02
+version:             0.03
 abstract:            ~
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.36
 distribution_type:   module
 requires:     
-    Ogre:                          0.33
+    Ogre:                          0.35
     Test::More:                    0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.2.html
