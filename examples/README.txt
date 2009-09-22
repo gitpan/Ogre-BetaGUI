@@ -9,20 +9,18 @@ for example on Ubuntu I did this:
 
   ln -s /etc/OGRE/plugins.cfg
 
-2) resources.cfg : an example from OGRE 1.4.3 has been included
-already. Be sure that the file paths point to where your media
-files are; for example, I copy the OGRE Samples/Media/ files
-into the examples directory like this:
+2) resources.cfg : taken from the Samples/Common/bin directory in OGRE,
+but I put it here also. For resources.cfg, you need to make sure
+it points to the Samples directory from OGRE 1.6.
+(It's important to point to 1.6 media, not 1.4, because some
+of the syntax has changed. You can edit resources.cfg to point
+wherever you want.) If you checked out Ogre's source from subversion
+as mentioned in README.txt for Ogre.pm, then create a symlink
+to the Samples directory like this:
 
-  mkdir -p ogrenew-1.4.3/Samples/Media
-  cp -r /tmp/ogrenew-1.4.3/Samples/Media/* ogrenew-1.4.3/Samples/Media/
+  ln -s $HOME/ogre/src/ogre/v1-6/Samples
 
-and in resources.cfg all the entries look like this:
-
-  Zip=ogrenew-1.4.3/Samples/Media/packs/skybox.zip
-
-You can also use relative or absolute path names.
-At the bottom of resources.cfg, add the following line:
+At the bottom of resources.cfg, be sure to have the following line:
 
   Zip=bguires.zip
 

@@ -13,7 +13,7 @@ WriteMakefile(
 
 sub check_prereqs {
     my %prereqs = (
-        'Ogre' => 0.35,
+        'Ogre' => 0.37,
         'Test::More' => 0,
     );
 

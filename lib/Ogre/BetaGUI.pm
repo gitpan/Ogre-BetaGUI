@@ -3,9 +3,9 @@ package Ogre::BetaGUI;
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
-use Ogre 0.35;   # can only be used in an Ogre app
+use Ogre 0.36;   # can only be used in an Ogre app
 
 
 # the rest is for exporting the constants of the 'wt' enum (not really even used...)

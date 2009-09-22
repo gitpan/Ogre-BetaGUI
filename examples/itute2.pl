@@ -11,7 +11,7 @@ use warnings;
 use Ogre::BetaGUI::BetaGUIListener;
 @MouseQueryGUI::ISA = qw(Ogre::BetaGUI::BetaGUIListener);
 
-use Ogre 0.33;
+use Ogre 0.37;
 use Ogre::BetaGUI::GUI;
 
 sub new {

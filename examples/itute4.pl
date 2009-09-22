@@ -12,7 +12,7 @@ use Ogre::BetaGUI::GUI;
 use Ogre::BetaGUI::BetaGUIListener;
 @DemoGUI::ISA = qw(Ogre::BetaGUI::BetaGUIListener);
 
-use Ogre 0.34;
+use Ogre 0.37;
 use Ogre::ManualObject;
 
 sub new {

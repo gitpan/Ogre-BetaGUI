@@ -57,7 +57,7 @@ Please report any bugs/suggestions to <slanning@cpan.org>.
 
 COPYRIGHT AND LICENCE
 
-Copyright 2007, Scott Lanning. All rights reserved.
+Copyright 2007,2009 Scott Lanning. All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, provided that in addition
